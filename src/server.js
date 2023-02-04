@@ -21,6 +21,7 @@ import {init, isAuthenticated} from "./auth/auth.js";
 import {HTTP_STATUS_CODES} from "@aicore/libcommonutils";
 import {getConfigs} from "./utils/configs.js";
 import {getHelloSchema, hello} from "./api/hello.js";
+
 const server = fastify({logger: true});
 /* Adding an authentication hook to the server. A hook is a function that is called when a request is made to
 the server. */
@@ -41,14 +42,9 @@ server.get('/hello', getHelloSchema(), function (request, reply) {
  * It starts the server and listens on the port specified in the configs
  */
 export async function startServer() {
-    try {
-        const configs = getConfigs();
-        init(configs.authKey);
-        await server.listen({port: configs.port, host: configs.allowPublicAccess ? '0.0.0.0' : 'localhost'});
-    } catch (err) {
-        console.error(err);
-        process.exit(1);
-    }
+    const configs = getConfigs();
+    init(configs.authKey);
+    await server.listen({port: configs.port, host: configs.allowPublicAccess ? '0.0.0.0' : 'localhost'});
 }
 
 export async function close() {

@@ -1,5 +1,4 @@
 /*global describe, it*/
-import * as assert from 'assert';
 import * as chai from 'chai';
 import {deleteAppConfig, getConfigs} from "../../../src/utils/configs.js";
 

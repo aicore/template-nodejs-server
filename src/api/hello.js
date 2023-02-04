@@ -1,6 +1,5 @@
 import {HTTP_STATUS_CODES} from "@aicore/libcommonutils";
 
-const BAD_REQUEST = HTTP_STATUS_CODES.BAD_REQUEST;
 // Refer https://json-schema.org/understanding-json-schema/index.html
 const schema = {
     schema: {
