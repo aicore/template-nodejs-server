@@ -17,9 +17,13 @@ describe('unit Tests for hello api', function () {
     });
 
     it('should validate schemas for sample request/responses', async function () {
+        let request = getSimpleGETRequest();
         // request
         const requestValidator = AJV.compile(getHelloSchema().schema.querystring);
-        expect(requestValidator(getSimpleGETRequest().query)).to.be.true;
+        expect(requestValidator(request.query)).to.be.true;
+        // message too long validation
+        request.query.name = "a name that is too long";
+        expect(requestValidator(request.query)).to.be.false;
         // response
         const successResponseValidator = AJV.compile(getHelloSchema().schema.response["200"]);
         let response = await hello(getSimpleGETRequest(), getSimpleGetReply());

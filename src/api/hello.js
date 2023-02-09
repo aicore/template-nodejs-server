@@ -5,7 +5,11 @@ const schema = {
             type: 'object',
             required: ['name'],
             properties: {
-                name: {type: 'string'}
+                name: {
+                    type: 'string',
+                    minLength: 1,
+                    maxLength: 10
+                }
             }
         },
         response: {
