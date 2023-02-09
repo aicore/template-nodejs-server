@@ -1,3 +1,5 @@
 {
-  "authKey": "123"
+  "authKey": "123",
+  "allowPublicAccess": false,
+  "port": 5000
 }

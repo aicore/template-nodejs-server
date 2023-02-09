@@ -1,5 +1,5 @@
 {
-  "port": "5000",
+  "port": 5000,
   "authKey": "YWxhZGRpbjpvcGVuc2VzYW1l",
   "allowPublicAccess": false,
   "mysql": {

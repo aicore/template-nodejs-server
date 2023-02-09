@@ -35,8 +35,9 @@
  * @module hello
  */
 
+import {pino} from 'pino';
 import {startServer} from "./server.js";
-
+global.Logger = pino();
 
 startServer();
 

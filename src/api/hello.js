@@ -1,5 +1,3 @@
-import {HTTP_STATUS_CODES} from "@aicore/libcommonutils";
-
 // Refer https://json-schema.org/understanding-json-schema/index.html
 const schema = {
     schema: {
@@ -7,11 +5,7 @@ const schema = {
             type: 'object',
             required: ['name'],
             properties: {
-                tableName: {
-                    type: 'string',
-                    minLength: 1,
-                    maxLength: 64
-                }
+                name: {type: 'string'}
             }
         },
         response: {

@@ -2,6 +2,15 @@ import * as fs from "fs";
 
 let APP_CONFIG = null;
 
+function _getValidatedConfig(configText) {
+    let config = JSON.parse(configText);
+    if(typeof config.port !== 'number'){
+        throw new Error("Invalid port(expected number) in config " + config.port);
+    }
+    console.log("using port: ", config.port);
+    return config;
+}
+
 /**
  * It returns an object with the port, authKey, and mySqlConfigs
  * @returns An object with the following properties:
@@ -18,13 +27,12 @@ export function getConfigs() {
             ' for example APP_CONFIG=./abc.json');
     }
     APP_CONFIG = _getAppConfig(process.env.APP_CONFIG);
-    APP_CONFIG.port = APP_CONFIG.port || '5000';
     return APP_CONFIG;
 }
 
 function _getAppConfig(file) {
     const appConfigFile = fs.readFileSync(file);
-    return JSON.parse(appConfigFile.toString());
+    return _getValidatedConfig(appConfigFile.toString());
 }
 
 export function deleteAppConfig() {
