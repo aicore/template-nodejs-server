@@ -16,20 +16,4 @@ and markdown code!
     // usage within default extensions:
     const Metrics = brackets.getModule("utils/Metrics");
 
-## helloWorld
-
-says hello world
-
-Type: [function][2]
-
-### Parameters
-
-*   `name` &#x20;
-
-Returns **[string][3]**&#x20;
-
 [1]: https://github.com/aicore/template-nodejs/wiki/How-To-Write-Docs
-
-[2]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Statements/function
-
-[3]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String

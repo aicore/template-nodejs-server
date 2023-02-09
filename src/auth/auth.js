@@ -9,7 +9,7 @@ export function init(authKey) {
     key = authKey;
 }
 
-export function isAuthenticated(request, _reply) {
+export function isAuthenticated(request) {
     if (!request.headers) {
         return false;
     }

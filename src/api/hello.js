@@ -24,7 +24,7 @@ export function getHelloSchema() {
     return schema;
 }
 
-export async function hello(request, reply) {
+export async function hello(request, _reply) {
     const name = request.query.name;
     const response = {
         message: `hello ${name}`

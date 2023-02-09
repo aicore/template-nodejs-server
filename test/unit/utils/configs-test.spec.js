@@ -4,7 +4,7 @@ import {deleteAppConfig, getConfigs} from "../../../src/utils/configs.js";
 
 let expect = chai.expect;
 
-describe('unit Tests', function () {
+describe('unit Tests for config', function () {
 
     it('verify config fail if APP_CONFIG not set properly', function () {
         const backEnv = process.env.APP_CONFIG;
