@@ -1,6 +1,6 @@
 {
   "port": 5000,
-  "authKey": "YWxhZGRpbjpvcGVuc2VzYW1l",
+  "authKey": "hehe",
   "allowPublicAccess": false,
   "mysql": {
     "host": "localhost",

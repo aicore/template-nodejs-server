@@ -41,7 +41,7 @@ describe('unit Tests', function () {
 
 function _verifyConfigs(configs) {
     expect(configs.port).to.eql(5000);
-    expect(configs.authKey.length).to.eql(24);
+    expect(configs.authKey).to.eql("hehe");
     expect(configs.mysql.port).to.eql('3306');
     expect(configs.mysql.user.length).to.gt(0);
     expect(configs.mysql.password.length).to.gt(0);
