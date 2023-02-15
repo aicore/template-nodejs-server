@@ -1,4 +1,8 @@
-# template-nodejs
+# template-nodejs-server
+A template project for nodejs server using fastify. Has integrated linting, testing,
+coverage, reporting, GitHub actions for publishing to npm repository, dependency updates and other goodies.
+
+Easily use this template to quick start a production ready nodejs project template.
 
 ```shell
 # do this to start server
@@ -16,12 +20,6 @@ curl -X GET 'http://127.0.0.1:5000/hello?name=rambo'  -H 'authorization: Basic 1
 # use this for continuous reload while development 
 npm run serve:dev
 ```
-
-A template project for nodejs. Has integrated linting, testing,
-coverage, reporting, GitHub actions for publishing to npm repository, dependency updates and other goodies.
-
-Easily use this template to quick start a production ready nodejs project template.
-
 ## Code Guardian
 
 [![<app> build verification](https://github.com/aicore/template-nodejs/actions/workflows/build_verify.yml/badge.svg)](https://github.com/aicore/template-nodejs/actions/workflows/build_verify.yml)
