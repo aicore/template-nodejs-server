@@ -2,8 +2,8 @@ import {isString} from "@aicore/libcommonutils";
 
 let key = null;
 const customAuthAPIPath = {},
-    API_AUTH_NONE = 1;
-    // API_AUTH_CUSTOM = 2;  maybe give a callback function here?
+    API_AUTH_NONE = 1,
+    API_AUTH_CUSTOM = 2;
 
 export function init(authKey) {
     if (!isString(authKey)) {
@@ -13,6 +13,9 @@ export function init(authKey) {
 }
 
 function _isBasicAuthPass(request) {
+    if (!request.headers) {
+        return false;
+    }
     const authHeader = request.headers.authorization;
     console.log(authHeader);
     if (!authHeader) {
@@ -42,14 +45,18 @@ function _getBaseURL(url = "") {
 }
 
 export function isAuthenticated(request) {
-    let customAuth = customAuthAPIPath[_getBaseURL(request.raw.url)] || {};
+    let customAuth = customAuthAPIPath[_getBaseURL(request.raw.url)];
+    if(!customAuth){
+        return _isBasicAuthPass(request);
+    }
     if( customAuth.authType === API_AUTH_NONE){
         return true;
     }
-    if (!request.headers) {
-        return false;
+    if( customAuth.authType === API_AUTH_CUSTOM && customAuth.authCallback){
+        return customAuth.authCallback(request);
     }
-    return _isBasicAuthPass(request);
+    // should never reach here, but future protect.
+    return false;
 }
 
 /**
@@ -60,6 +67,19 @@ export function isAuthenticated(request) {
 export function addUnAuthenticatedAPI(apiPath) {
     customAuthAPIPath[apiPath] = {
         authType: API_AUTH_NONE
+    };
+}
+
+/**
+ * There would be certain APIs that you have to provide your own custom auth logic. Use this API for that.
+ * @param {string} apiPath of the form "/path/to/api" , The route must exactly match the api name in `server.get` call.
+ * @param {function} authCallback will be called with the request and should return true if the request is authorised
+ * and able to continue, else return false.
+ */
+export function addCustomAuthorizer(apiPath, authCallback) {
+    customAuthAPIPath[apiPath] = {
+        authType: API_AUTH_CUSTOM,
+        authCallback
     };
 }
 

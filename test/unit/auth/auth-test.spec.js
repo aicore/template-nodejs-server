@@ -1,4 +1,4 @@
-import {isAuthenticated, init, getAuthKey, addUnAuthenticatedAPI} from "../../../src/auth/auth.js";
+import {isAuthenticated, init, getAuthKey, addUnAuthenticatedAPI, addCustomAuthorizer} from "../../../src/auth/auth.js";
 /*global describe, it*/
 
 import * as chai from 'chai';
@@ -119,6 +119,25 @@ describe('unit tests for auth module', function () {
 
         }, {});
         expect(authenticated).eql(false);
+    });
+
+    it('addCustomAuthorizer should be called for given api', function () {
+        let customAuthRequest;
+        addCustomAuthorizer("/testAPI01", (request)=>{
+            customAuthRequest = request;
+            return false;
+        });
+        const authenticated = isAuthenticated({
+            headers: {
+                abc: '123',
+                auth: 'custom'
+            }, raw: {
+                url: "/testAPI01#43?z=34"
+            }
+
+        }, {});
+        expect(authenticated).eql(false);
+        expect(customAuthRequest.headers.auth).eql('custom');
     });
 
 });
