@@ -17,7 +17,7 @@
  */
 
 import fastify from "fastify";
-import {init, isAuthenticated} from "./auth/auth.js";
+import {init, isAuthenticated, addUnAuthenticatedAPI} from "./auth/auth.js";
 import {HTTP_STATUS_CODES} from "@aicore/libcommonutils";
 import {getConfigs} from "./utils/configs.js";
 import {getHelloSchema, hello} from "./api/hello.js";
@@ -34,7 +34,14 @@ server.addHook('onRequest', (request, reply, done) => {
     }
 });
 
+// public hello api
+addUnAuthenticatedAPI('/hello');
 server.get('/hello', getHelloSchema(), function (request, reply) {
+    return hello(request, reply);
+});
+
+// An authenticated version of the hello api
+server.get('/helloAuth', getHelloSchema(), function (request, reply) {
     return hello(request, reply);
 });
 

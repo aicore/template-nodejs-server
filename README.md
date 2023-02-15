@@ -2,7 +2,8 @@
 
 ```shell
 # do this to start server
-export export  APP_CONFIG=./src/.app.json
+cp ./src/a.json ./src/.app.json
+export APP_CONFIG=./src/.app.json
 npm install
 npm run serve 
 

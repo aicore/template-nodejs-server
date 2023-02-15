@@ -1,6 +1,9 @@
 import {isString} from "@aicore/libcommonutils";
 
 let key = null;
+const customAuthAPIPath = {},
+    API_AUTH_NONE = 1;
+    // API_AUTH_CUSTOM = 2;  maybe give a callback function here?
 
 export function init(authKey) {
     if (!isString(authKey)) {
@@ -9,10 +12,7 @@ export function init(authKey) {
     key = authKey;
 }
 
-export function isAuthenticated(request) {
-    if (!request.headers) {
-        return false;
-    }
+function _isBasicAuthPass(request) {
     const authHeader = request.headers.authorization;
     console.log(authHeader);
     if (!authHeader) {
@@ -29,6 +29,38 @@ export function isAuthenticated(request) {
         }
     }
     return false;
+}
+
+/**
+ * path of form '/x/y#df?a=30' to '/x/y' or 'https://d/x/y#df?a=30' to 'https://d/x/y'
+ * @param url any url
+ * @return {string} url or path without any query string or # params
+ * @private
+ */
+function _getBaseURL(url = "") {
+    return url.split("?")[0].split("#")[0];
+}
+
+export function isAuthenticated(request) {
+    let customAuth = customAuthAPIPath[_getBaseURL(request.raw.url)] || {};
+    if( customAuth.authType === API_AUTH_NONE){
+        return true;
+    }
+    if (!request.headers) {
+        return false;
+    }
+    return _isBasicAuthPass(request);
+}
+
+/**
+ * There would be certain APIs that you need to work without auth. This function sets a given API path
+ * as requiring no authentication.
+ * @param {string} apiPath of the form "/path/to/api" , The route must exactly match the api name in `server.get` call.
+ */
+export function addUnAuthenticatedAPI(apiPath) {
+    customAuthAPIPath[apiPath] = {
+        authType: API_AUTH_NONE
+    };
 }
 
 export function getAuthKey() {

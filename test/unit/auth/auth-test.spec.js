@@ -1,4 +1,4 @@
-import {isAuthenticated, init, getAuthKey} from "../../../src/auth/auth.js";
+import {isAuthenticated, init, getAuthKey, addUnAuthenticatedAPI} from "../../../src/auth/auth.js";
 /*global describe, it*/
 
 import * as chai from 'chai';
@@ -30,6 +30,8 @@ describe('unit tests for auth module', function () {
         const authenticated = isAuthenticated({
             headers: {
                 authorization: 'Basic 1'
+            }, raw: {
+                url: ""
             }
 
         }, {});
@@ -37,7 +39,9 @@ describe('unit tests for auth module', function () {
     });
     it('isAuthenticated should fail if headers are missing', function () {
         init(getConfigs().authKey);
-        const authenticated = isAuthenticated({}, {});
+        const authenticated = isAuthenticated({raw: {
+            url: ""
+        }}, {});
         expect(authenticated).eql(false);
     });
     it('isAuthenticated should fail', function () {
@@ -45,6 +49,8 @@ describe('unit tests for auth module', function () {
         const authenticated = isAuthenticated({
             headers: {
                 authorization: 'Basic 10'
+            }, raw: {
+                url: ""
             }
 
         }, {});
@@ -56,6 +62,8 @@ describe('unit tests for auth module', function () {
         const authenticated = isAuthenticated({
             headers: {
                 authorization: 'Basic 1 1234'
+            }, raw: {
+                url: ""
             }
 
         }, {});
@@ -66,6 +74,8 @@ describe('unit tests for auth module', function () {
         const authenticated = isAuthenticated({
             headers: {
                 authorization: '123 1'
+            }, raw: {
+                url: ""
             }
 
         }, {});
@@ -76,6 +86,35 @@ describe('unit tests for auth module', function () {
         const authenticated = isAuthenticated({
             headers: {
                 abc: '123'
+            }, raw: {
+                url: ""
+            }
+
+        }, {});
+        expect(authenticated).eql(false);
+    });
+
+    it('addUnAuthenticatedAPI should disable authentication for given api', function () {
+        init(getConfigs().authKey);
+        addUnAuthenticatedAPI("/testAPI01");
+        const authenticated = isAuthenticated({
+            headers: {
+                abc: '123'
+            }, raw: {
+                url: "/testAPI01#43?z=34"
+            }
+
+        }, {});
+        expect(authenticated).eql(true);
+    });
+
+    it('addUnAuthenticatedAPI should not disable authentication if api signature mismatch with /', function () {
+        addUnAuthenticatedAPI("/testAPI01");
+        const authenticated = isAuthenticated({
+            headers: {
+                abc: '123'
+            }, raw: {
+                url: "/testAPI01/#43?z=34" // note the / at the end of url
             }
 
         }, {});
