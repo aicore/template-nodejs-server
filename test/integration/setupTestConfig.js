@@ -18,5 +18,5 @@ if (process.env.APP_CONFIG_FOR_INTEG_TESTS) {
         "as no CI environment variable APP_CONFIG_FOR_INTEG_TESTS detected \n If you wish to run this from GitHub " +
         "actions, set a repository secret APP_CONFIG_FOR_INTEG_TESTS which contains the app config");
     console.warn("Please edit src/testConfig.json to add your own app config for tests!!");
-    writeFileSync("src/testConfig.json", JSON.stringify(defaultTestConfig));
+    writeFileSync("src/testConfig.json", JSON.stringify(defaultTestConfig, null, 4));
 }
