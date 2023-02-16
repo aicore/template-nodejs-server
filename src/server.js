@@ -22,7 +22,12 @@ import {HTTP_STATUS_CODES} from "@aicore/libcommonutils";
 import {getConfigs} from "./utils/configs.js";
 import {getHelloSchema, hello} from "./api/hello.js";
 
-const server = fastify({logger: true});
+const server = fastify({
+    logger: true,
+    // https://www.fastify.io/docs/latest/Reference/Server/#trustproxy
+    // needed to forward correct IP addresses in a reverse proxy configuration
+    trustProxy: true
+});
 /* Adding an authentication hook to the server. A hook is a function that is called when a request is made to
 the server. */
 server.addHook('onRequest', (request, reply, done) => {
@@ -33,11 +38,13 @@ server.addHook('onRequest', (request, reply, done) => {
     });
 
     if (!routeExists) {
+        console.error("route does not exist for ", request.raw.url);
         reply.code(HTTP_STATUS_CODES.NOT_FOUND);
-        done(new Error('Not Found'));
+        done('Not Found');
     } else if (!isAuthenticated(request)) {
+        console.error(`Unauthorised access for ${request.raw.url} from IP ${request.ips} `);
         reply.code(HTTP_STATUS_CODES.UNAUTHORIZED);
-        done(new Error('Wrong key'));
+        done("Unauthorized");
     } else {
         done();
     }
