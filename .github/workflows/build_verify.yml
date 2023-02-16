@@ -22,5 +22,7 @@ jobs:
         run: |
           npm run cover:unit
       - name: Running Integration tests
+        env:
+          APP_CONFIG_FOR_INTEG_TESTS: ${{ secrets.APP_CONFIG_FOR_INTEG_TESTS || '' }}
         run: |
           npm run test:integ

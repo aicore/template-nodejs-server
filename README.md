@@ -11,8 +11,9 @@ export APP_CONFIG=./src/.app.json
 npm install
 npm run serve 
 
-# To hit end point
-curl -X GET 'http://127.0.0.1:5000/hello?name=rambo'  -H 'authorization: Basic 123' -H 'Content-Type: application/json' -v 
+# To hit end point, go to browser url http://127.0.0.1:5000/hello?name=rambo
+# or to hit the authenticated url, do the curl command below 
+curl -X GET 'http://127.0.0.1:5000/helloAuth?name=rambo'  -H 'authorization: Basic 123' -H 'Content-Type: application/json' -v 
 
 ```
 
@@ -79,7 +80,27 @@ To Automatically fix lint errors:
 
 ## Testing
 
-To run all tests:
+### Run unit tests
+```shell
+> npm run test:unit
+```
+
+### Running integration tests locally
+
+```shell
+> npm run test:integ
+```
+You can edit `src/testConfig.json` to change app config for tests after running the above command.
+
+### Running integration tests in GitHub actions
+You have to set a repository secret `APP_CONFIG_FOR_INTEG_TESTS` with
+content of the text config.
+* Goto your repository settings https://github.com/<your org>/<your repo>/settings/secrets/actions
+* Create a new `Repository secret` with name `APP_CONFIG_FOR_INTEG_TESTS` and the secret as the config file contents.
+* The build verify action should now be able to use the secret.
+* Note that pull requests cannot read repository secrets and subsequently cannot run integration tests.
+
+### To run all tests:
 
 ```shell
 > npm run test
