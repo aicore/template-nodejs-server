@@ -6,8 +6,7 @@ Easily use this template to quick start a production ready nodejs project templa
 
 ```shell
 # do this to start server
-cp ./src/a.json ./src/.app.json
-export APP_CONFIG=./src/.app.json
+cp ./src/a.json ./src/app.json
 npm install
 npm run serve 
 
