@@ -37,4 +37,14 @@ describe('Integration Tests for hello api', function () {
             "message": "Wrong key",
             "statusCode": 401});
     });
+
+    it('should reply 404 if route doesnt exist', async function () {
+        let output = await fetch("http://localhost:5000/routeNotExist?name=world", { method: 'GET'});
+        output = await output.json();
+        expect(output).eql({
+            "statusCode": 404,
+            "error": "Not Found",
+            "message": "Not Found"
+        });
+    });
 });

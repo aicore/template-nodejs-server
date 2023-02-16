@@ -26,7 +26,16 @@ const server = fastify({logger: true});
 /* Adding an authentication hook to the server. A hook is a function that is called when a request is made to
 the server. */
 server.addHook('onRequest', (request, reply, done) => {
-    if (!isAuthenticated(request)) {
+    const routeExists = server.hasRoute({
+        url: request.raw.url,
+        method: request.raw.method
+        // constraints: { version: '1.0.0' } specify this if you are doing something custom
+    });
+
+    if (!routeExists) {
+        reply.code(HTTP_STATUS_CODES.NOT_FOUND);
+        done(new Error('Not Found'));
+    } else if (!isAuthenticated(request)) {
         reply.code(HTTP_STATUS_CODES.UNAUTHORIZED);
         done(new Error('Wrong key'));
     } else {
