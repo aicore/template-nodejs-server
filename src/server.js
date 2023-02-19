@@ -21,6 +21,12 @@ import {init, isAuthenticated, addUnAuthenticatedAPI} from "./auth/auth.js";
 import {HTTP_STATUS_CODES} from "@aicore/libcommonutils";
 import {getConfigs} from "./utils/configs.js";
 import {getHelloSchema, hello} from "./api/hello.js";
+import {fastifyStatic} from "@fastify/static";
+
+import path from 'path';
+import { fileURLToPath } from 'url';
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const server = fastify({
     logger: true,
@@ -49,6 +55,21 @@ server.addHook('onRequest', (request, reply, done) => {
         done();
     }
 });
+
+
+// static web pages
+console.log("Serving static files from path: ", __dirname + '/www/');
+addUnAuthenticatedAPI('/www/*');
+server.register(fastifyStatic, {
+    root: __dirname + '/www/',
+    prefix: '/www/'
+});
+addUnAuthenticatedAPI('/www');
+server.get('/www', function(req, res){
+    // redirect www to www/
+    res.redirect(301, req.url + '/');
+});
+
 
 // public hello api
 addUnAuthenticatedAPI('/hello');
