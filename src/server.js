@@ -20,7 +20,7 @@ import fastify from "fastify";
 import {init, isAuthenticated, addUnAuthenticatedAPI} from "./auth/auth.js";
 import {HTTP_STATUS_CODES} from "@aicore/libcommonutils";
 import {getConfigs} from "./utils/configs.js";
-import {getHelloSchema, hello} from "./api/hello.js";
+import {getHelloSchema, hello, getHelloPostSchema, helloPost} from "./api/hello.js";
 import {fastifyStatic} from "@fastify/static";
 
 import path from 'path';
@@ -75,6 +75,11 @@ server.get('/www', function(req, res){
 addUnAuthenticatedAPI('/hello');
 server.get('/hello', getHelloSchema(), function (request, reply) {
     return hello(request, reply);
+});
+
+addUnAuthenticatedAPI('/helloPost');
+server.post('/helloPost', getHelloPostSchema(), function (request, reply) {
+    return helloPost(request, reply);
 });
 
 // An authenticated version of the hello api
