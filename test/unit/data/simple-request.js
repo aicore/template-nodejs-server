@@ -72,4 +72,54 @@ export function getSimpleGetReply() {
     return {...simpleGetReply};
 }
 
+const simplePostRequest = {
+    id: "req-2",
+    params:{},
+    query:{},
+    body: {
+        "name": "rambo"
+    },
+    raw:{
+        httpVersionMajor: 1,
+        httpVersionMinor: 1,
+        httpVersion: "1.1",
+        complete: false,
+        rawHeaders: [
+            "content-length",
+            "21",
+            "accept-encoding",
+            "gzip, deflate, br",
+            "Accept",
+            "*/*",
+            "User-Agent",
+            "Thunder Client (https://www.thunderclient.com)",
+            "Content-Type",
+            "application/json",
+            "Host",
+            "localhost:5000",
+            "Connection",
+            "close"
+        ],
+        rawTrailers: [],
+        aborted: false,
+        upgrade: false,
+        url: "/helloPost",
+        method: "POST",
+        statusCode: null,
+        statusMessage: null
+    },
+    log: logger
+};
+export function getSimplePOSTRequest() {
+    return {...simplePostRequest};
+}
+
+const simplePOSTReply = {
+    request: simpleGETRequest,
+    log: logger,
+    raw: {}
+};
+export function getSimplePOSTReply() {
+    return {...simplePOSTReply};
+}
 

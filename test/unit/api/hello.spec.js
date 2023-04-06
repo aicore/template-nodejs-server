@@ -1,7 +1,7 @@
 /*global describe, it*/
 import * as chai from 'chai';
-import {hello, getHelloSchema} from "../../../src/api/hello.js";
-import {getSimpleGetReply, getSimpleGETRequest} from '../data/simple-request.js';
+import {hello, getHelloSchema, helloPost, getHelloPostSchema} from "../../../src/api/hello.js";
+import {getSimpleGetReply, getSimpleGETRequest, getSimplePOSTReply, getSimplePOSTRequest} from '../data/simple-request.js';
 import Ajv from "ajv";
 
 export const AJV = new Ajv();
@@ -16,7 +16,7 @@ describe('unit Tests for hello api', function () {
         expect(helloResponse).eql({message: 'hello rambo'});
     });
 
-    it('should validate schemas for sample request/responses', async function () {
+    it('should validate schemas for sample GET request/responses', async function () {
         let request = getSimpleGETRequest();
         // request
         const requestValidator = AJV.compile(getHelloSchema().schema.querystring);
@@ -27,6 +27,20 @@ describe('unit Tests for hello api', function () {
         // response
         const successResponseValidator = AJV.compile(getHelloSchema().schema.response["200"]);
         let response = await hello(getSimpleGETRequest(), getSimpleGetReply());
+        expect(successResponseValidator(response)).to.be.true;
+    });
+
+    it('should validate schemas for sample POST request/responses', async function () {
+        let request = getSimplePOSTRequest();
+        // request
+        const requestValidator = AJV.compile(getHelloPostSchema().schema.body);
+        expect(requestValidator(request.body)).to.be.true;
+        // message too long validation
+        request.body.name = "a name that is too long";
+        expect(requestValidator(request.body)).to.be.false;
+        // response
+        const successResponseValidator = AJV.compile(getHelloPostSchema().schema.response["200"]);
+        let response = await helloPost(getSimplePOSTRequest(), getSimplePOSTReply());
         expect(successResponseValidator(response)).to.be.true;
     });
 });

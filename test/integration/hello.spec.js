@@ -21,6 +21,26 @@ describe('Integration Tests for hello api', function () {
         expect(output).eql({message: "hello world"});
     });
 
+    it('should say hello Post without auth', async function () {
+        let output = await fetch("http://localhost:5000/helloPost", {
+            method: 'post',
+            body: JSON.stringify({name: "ola"}),
+            headers: {'Content-Type': 'application/json'}
+        });
+        output = await output.json();
+        expect(output).eql({message: "hello ola"});
+    });
+
+    it('should hello Post say 400 without required args', async function () {
+        let output = await fetch("http://localhost:5000/helloPost", {
+            method: 'post',
+            body: JSON.stringify({}),
+            headers: {'Content-Type': 'application/json'}
+        });
+        output = await output.json();
+        expect(output.statusCode).eql(400);
+    });
+
     it('should say helloAuth if authorised', async function () {
         let output = await fetch("http://localhost:5000/helloAuth?name=world", { method: 'GET', headers: {
             authorization: "Basic hehe"
