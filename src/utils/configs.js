@@ -35,6 +35,6 @@ function _getAppConfig(file) {
     return _getValidatedConfig(appConfigFile.toString());
 }
 
-export function deleteAppConfig() {
+export function clearAppConfig() {
     APP_CONFIG = null;
 }

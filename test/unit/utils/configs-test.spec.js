@@ -1,6 +1,6 @@
 /*global describe, it*/
 import * as chai from 'chai';
-import {deleteAppConfig, getConfigs} from "../../../src/utils/configs.js";
+import {clearAppConfig, getConfigs} from "../../../src/utils/configs.js";
 
 let expect = chai.expect;
 
@@ -9,7 +9,7 @@ describe('unit Tests for config', function () {
     it('verify config fail if APP_CONFIG not set properly', function () {
         const backEnv = process.env.APP_CONFIG;
         delete process.env.APP_CONFIG;
-        deleteAppConfig();
+        clearAppConfig();
         let exceptionOccurred = false;
         try {
             getConfigs();
