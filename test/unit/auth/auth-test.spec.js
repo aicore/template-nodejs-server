@@ -14,6 +14,7 @@ describe('unit tests for auth module', function () {
         const key = getAuthKey();
         expect(key).eql(authKey);
     });
+
     it('should throw exception if key is null', function () {
         let exceptionOccurred = false;
         try {
@@ -23,36 +24,34 @@ describe('unit tests for auth module', function () {
             expect(e.toString()).eql('Error: please set authKey in config file');
         }
         expect(exceptionOccurred).eql(true);
-
     });
+
     it('isAuthenticated should pass', function () {
         init('1');
         const authenticated = isAuthenticated({
             headers: {
                 authorization: 'Basic 1'
-            }, raw: {
-                url: ""
-            }
-
+            },
+            url: ""
         }, {});
         expect(authenticated).eql(true);
     });
+
     it('isAuthenticated should fail if headers are missing', function () {
         init(getConfigs().authKey);
-        const authenticated = isAuthenticated({raw: {
+        const authenticated = isAuthenticated({
             url: ""
-        }}, {});
+        }, {});
         expect(authenticated).eql(false);
     });
+
     it('isAuthenticated should fail', function () {
         init('1');
         const authenticated = isAuthenticated({
             headers: {
                 authorization: 'Basic 10'
-            }, raw: {
-                url: ""
-            }
-
+            },
+            url: ""
         }, {});
         expect(authenticated).eql(false);
     });
@@ -62,34 +61,30 @@ describe('unit tests for auth module', function () {
         const authenticated = isAuthenticated({
             headers: {
                 authorization: 'Basic 1 1234'
-            }, raw: {
-                url: ""
-            }
-
+            },
+            url: ""
         }, {});
         expect(authenticated).eql(false);
     });
+
     it('isAuthenticated should fail if auth is not basic', function () {
         init('1');
         const authenticated = isAuthenticated({
             headers: {
                 authorization: '123 1'
-            }, raw: {
-                url: ""
-            }
-
+            },
+            url: ""
         }, {});
         expect(authenticated).eql(false);
     });
+
     it('isAuthenticated should fail if auth header is not defined', function () {
         init(getConfigs().authKey);
         const authenticated = isAuthenticated({
             headers: {
                 abc: '123'
-            }, raw: {
-                url: ""
-            }
-
+            },
+            url: ""
         }, {});
         expect(authenticated).eql(false);
     });
@@ -98,9 +93,8 @@ describe('unit tests for auth module', function () {
         const authenticated = isAuthenticated({
             headers: {
                 abc: '123'
-            }, raw: {
-                url
-            }
+            },
+            url: url
         }, {});
         expect(authenticated).eql(expectedAuthenticated);
     }
@@ -138,19 +132,18 @@ describe('unit tests for auth module', function () {
 
     function _verifyCustomAuthorizerCalled(addCustomAuthURL, urlToTest) {
         let customAuthRequest;
-        addCustomAuthorizer(addCustomAuthURL, (request)=>{
+        addCustomAuthorizer(addCustomAuthURL, (request) => {
             customAuthRequest = request;
             return false;
         });
-        const authenticated = isAuthenticated({
+        const request = {
             headers: {
                 abc: '123',
                 auth: 'custom'
-            }, raw: {
-                url: urlToTest
-            }
-
-        }, {});
+            },
+            url: urlToTest
+        };
+        const authenticated = isAuthenticated(request, {});
         expect(authenticated).eql(false);
         expect(customAuthRequest.headers.auth).eql('custom');
     }
@@ -163,5 +156,4 @@ describe('unit tests for auth module', function () {
         _verifyCustomAuthorizerCalled("/testAPICustom/*", "/testAPICustom/x#43?z=34");
         _verifyCustomAuthorizerCalled("/testAPICustom2*", "/testAPICustom2index/x#43?z=34");
     });
-
 });
