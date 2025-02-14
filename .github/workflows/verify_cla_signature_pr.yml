@@ -1,14 +1,14 @@
 name: Checking CLA Signature
 # https://docs.github.com/en/actions/reference/context-and-expression-syntax-for-github-actions#github-context
-# The pull request target event provides RW token to github 
+# The pull request target event provides RW token to github
 # https://github.blog/2020-08-03-github-actions-improvements-for-fork-and-pull-request-workflows/
 # But `on: pull_request_target` should be avoided due to security
 # reasons. Read more: [SEC_ADV_1] https://securitylab.github.com/research/github-actions-preventing-pwn-requests/
-# 
+#
 # We will use a mix of github pull_request that does not provide any write access to pull requests on forks
 # and workflow event, as discussed in [SEC_ADV_1]
 
-on: 
+on:
   pull_request:
     branches:
       - main
@@ -45,7 +45,7 @@ jobs:
           cat ./.tmp/github.json
           echo "commit details: "
           cat ./.tmp/commitDetails.json
-      
+
       - name: Review pull request
         run: |
           which git
@@ -58,12 +58,12 @@ jobs:
         env:
           EMPLOYER_CLA_LINK: https://raw.githubusercontent.com/aicore/contributor-license-agreement/main/employer_contributor_license_agreement.md
           PERSONAL_CLA_LINK: https://raw.githubusercontent.com/aicore/contributor-license-agreement/main/personal_contributor_licence_agreement.md
-      
-      - uses: actions/upload-artifact@v3
+
+      - uses: actions/upload-artifact@v4
         with:
           name: prcontext
           path: .tmp/
-      
+
       - name: Fail on validation errors
         run: |
           FILE=./.tmp/failed
