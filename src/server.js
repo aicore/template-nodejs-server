@@ -1,19 +1,6 @@
 /*
  * GNU AGPL-3.0 License
- *
  * Copyright (c) 2021 - present core.ai . All rights reserved.
- *
- * This program is free software: you can redistribute it and/or modify it under
- * the terms of the GNU Affero General Public License as published by the Free
- * Software Foundation, either version 3 of the License, or (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
- * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- * See the GNU Affero General Public License for more details.
- *
- * You should have received a copy of the GNU Affero General Public License along
- * with this program. If not, see https://opensource.org/licenses/AGPL-3.0.
- *
  */
 
 import fastify from "fastify";
@@ -29,6 +16,7 @@ import compression from '@fastify/compress';
 
 import path from 'path';
 import {fileURLToPath} from 'url';
+import * as fs from "node:fs";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -36,9 +24,19 @@ const __dirname = path.dirname(__filename);
 const server = fastify({
     logger: true,
     trustProxy: true,
-    bodyLimit: 1048576, // 1MB limit
-    connectionTimeout: 30000, // 30 seconds
+    bodyLimit: 1048576,
+    connectionTimeout: 30000,
     keepAliveTimeout: 30000
+});
+// Add Request ID Propagation
+server.decorateRequest('setCorrelationId', function (correlationId) {
+    this.correlationId = correlationId;
+});
+
+// Add Version Headers
+server.addHook('onSend', (request, reply, payload, done) => {
+    reply.header('X-API-Version', '1.0.0');
+    done();
 });
 
 // Register compression
@@ -93,13 +91,44 @@ server.register(cors, {
     preflight: true
 });
 
-// Global error handler
+// Response Sanitization
+function sanitizeResponse(data) {
+    const sensitiveFields = ['password', 'token', 'secret', 'key', 'auth'];
+    if (typeof data === 'object' && data !== null) {
+        const sanitized = {...data};
+        Object.keys(sanitized).forEach(key => {
+            if (sensitiveFields.includes(key.toLowerCase())) {
+                delete sanitized[key];
+            }
+        });
+        return sanitized;
+    }
+    return data;
+}
+
+server.addHook('preSerialization', (request, reply, payload, done) => {
+    done(null, sanitizeResponse(payload));
+});
+
+// Global error handler with correlation ID
 server.setErrorHandler((error, request, reply) => {
-    request.log.error(error);
-    const message = process.env.NODE_ENV === 'production'
-        ? 'Internal Server Error'
-        : error.message;
-    reply.status(500).send({error: message});
+    const errorLog = {
+        reqId: request.id,
+        correlationId: request.correlationId,
+        url: request.url,
+        method: request.method,
+        statusCode: error.statusCode || 500,
+        error: error.message,
+        stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+    };
+    request.log.error(errorLog);
+
+    reply.status(error.statusCode || 500).send({
+        error: process.env.NODE_ENV === 'production'
+            ? 'Internal Server Error'
+            : error.message,
+        correlationId: request.correlationId
+    });
 });
 
 // Add request validation hook
@@ -111,13 +140,17 @@ server.addHook('preValidation', (request, reply, done) => {
     done();
 });
 
-// Add timestamp tracking
+// Add timestamp tracking and correlation ID
 server.addHook('onRequest', (request, reply, done) => {
+    const correlationId = request.headers['x-correlation-id'] || request.id;
+    request.setCorrelationId(correlationId);
+    reply.header('x-correlation-id', correlationId);
+
     request.startTime = Date.now();
-    // Log request size if available
     if (request.headers['content-length']) {
         request.log.info({
             reqId: request.id,
+            correlationId: request.correlationId,
             msg: 'Request size',
             size: `${request.headers['content-length']} bytes`
         });
@@ -129,15 +162,21 @@ server.addHook('onRequest', (request, reply, done) => {
 server.addHook('onRequest', (request, reply, done) => {
     const urlWithoutQuery = request.url.split('?')[0];
     const sanitizedUrl = urlWithoutQuery.replace(/[<>]/g, '');
-
+    console.log(sanitizedUrl);
+    // Skip authentication for static files
+    if (request.url.startsWith('/www/')) {
+        done();
+        return;
+    }
     const routeExists = server.hasRoute({
         url: urlWithoutQuery,
         method: request.method
     });
-
+    console.log(routeExists);
     if (!routeExists) {
         request.log.error({
             reqId: request.id,
+            correlationId: request.correlationId,
             msg: "Route not found",
             url: sanitizedUrl,
             method: request.method,
@@ -148,6 +187,7 @@ server.addHook('onRequest', (request, reply, done) => {
     } else if (!isAuthenticated(request)) {
         request.log.warn({
             reqId: request.id,
+            correlationId: request.correlationId,
             msg: "Unauthorized access attempt",
             url: sanitizedUrl,
             method: request.method,
@@ -158,6 +198,7 @@ server.addHook('onRequest', (request, reply, done) => {
     }
     request.log.info({
         reqId: request.id,
+        correlationId: request.correlationId,
         msg: "Request authenticated",
         url: sanitizedUrl,
         method: request.method
@@ -169,6 +210,7 @@ server.addHook('onRequest', (request, reply, done) => {
 server.addHook('onRequest', (request, reply, done) => {
     request.log.info({
         reqId: request.id,
+        correlationId: request.correlationId,
         msg: 'Incoming request',
         url: request.url,
         method: request.method,
@@ -177,11 +219,12 @@ server.addHook('onRequest', (request, reply, done) => {
     done();
 });
 
-// Response logging hook
+// Response logging hook with correlation ID
 server.addHook('onResponse', (request, reply, done) => {
     const duration = Date.now() - request.startTime;
     const logData = {
         reqId: request.id,
+        correlationId: request.correlationId,
         msg: 'Request completed',
         url: request.url,
         method: request.method,
@@ -192,33 +235,63 @@ server.addHook('onResponse', (request, reply, done) => {
     done();
 });
 
-// static web pages
-console.log("Serving static files from path: ", __dirname + '/www/');
-addUnAuthenticatedAPI('/www/*');
+// Register static file serving
 server.register(fastifyStatic, {
-    root: __dirname + '/www/',
+    root: path.join(__dirname, 'www'),
     prefix: '/www/',
-    maxAge: 86400000, // 1 day caching
-    immutable: true,
     decorateReply: false,
-    dotfiles: 'deny',
-    etag: true
+    serve: true,
+    index: ['index.html', 'index.htm']
 });
 
-addUnAuthenticatedAPI('/www');
-server.get('/www', function (req, res) {
-    res.redirect(301, req.url + '/');
+
+// Enhanced Health Check endpoint
+server.get('/health', async (request, reply) => {
+    try {
+        const health = {
+            status: 'OK',
+            timestamp: new Date().toISOString(),
+            uptime: process.uptime(),
+            memory: process.memoryUsage(),
+            version: process.version,
+            pid: process.pid,
+            environment: process.env.NODE_ENV || 'development',
+            serverInfo: {
+                nodeVersion: process.version,
+                platform: process.platform,
+                cpuArch: process.arch
+            }
+        };
+
+        try {
+            // Add your custom health checks here if needed
+            health.dependencies = {
+                status: 'OK'
+            };
+        } catch (error) {
+            health.dependencies = {
+                status: 'ERROR'
+            };
+            reply.code(503);
+        }
+
+        reply.send(health);
+    } catch (error) {
+        request.log.error('Health check failed:', error);
+        reply.code(503).send({
+            status: 'ERROR',
+            timestamp: new Date().toISOString(),
+            error: process.env.NODE_ENV === 'production' ?
+                'Service Unavailable' :
+                error.message
+        });
+    }
 });
 
-// Health check endpoint
-addUnAuthenticatedAPI('/health');
-server.get('/health', (request, reply) => {
-    reply.send({
-        status: 'OK',
-        timestamp: new Date().toISOString()
-    });
+addUnAuthenticatedAPI('/ping');
+server.get('/ping', async (request, reply) => {
+    reply.send({status: 'OK'});
 });
-
 // public hello api
 addUnAuthenticatedAPI('/hello');
 server.get('/hello', getHelloSchema(), function (request, reply) {
@@ -263,7 +336,13 @@ export async function startServer() {
 export async function close() {
     server.log.info('Shutting down server...');
     try {
+        const shutdownTimeout = setTimeout(() => {
+            server.log.warn('Forced shutdown after timeout');
+            process.exit(1);
+        }, 30000);
+
         await server.close();
+        clearTimeout(shutdownTimeout);
         server.log.info('Server shut down successfully');
     } catch (err) {
         server.log.error('Error during shutdown:', err);
