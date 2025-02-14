@@ -45,7 +45,7 @@ function _getBaseURL(url = "") {
 }
 
 function _findAuthorizer(request) {
-    const baseURL = _getBaseURL(request.raw.url);
+    const baseURL = _getBaseURL(request.url);  // Changed from request.raw.url
     let customAuth = customAuthAPIPath[baseURL];
     if(customAuth) {
         return customAuth;
