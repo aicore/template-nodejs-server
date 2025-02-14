@@ -13,6 +13,8 @@ export default [
             globals: {
                 process: 'readonly',    // Assume process is a global variable (specific to Node.js)
                 setTimeout: 'readonly', // Assume setTimeout is a global variable
+                clearTimeout: 'readonly',  // Added clearTimeout
+                global: 'readonly',        // Added global
                 console: 'readonly',
                 structuredClone: 'readonly', // Add structuredClone as a global
                 beforeEach: 'readonly', // Testing framework globals
@@ -53,7 +55,7 @@ export default [
             'no-use-before-define': 'off',
             'no-new-require': 'error',
             'block-spacing': 'warn',
-            'brace-style': ['warn', '1tbs', { 'allowSingleLine': true }],
+            'brace-style': ['warn', '1tbs', {'allowSingleLine': true}],
             'camelcase': 'warn',
             'comma-dangle': 'error',
             'comma-spacing': 'warn',
@@ -62,7 +64,7 @@ export default [
             'eol-last': 'warn',
             'func-call-spacing': 'warn',
             'indent': ['warn', 4],
-            'key-spacing': ['warn', { 'beforeColon': false, 'afterColon': true }],
+            'key-spacing': ['warn', {'beforeColon': false, 'afterColon': true}],
             'max-len': ['warn', 120],
             'new-cap': ['off', {
                 'capIsNewExceptions': [
