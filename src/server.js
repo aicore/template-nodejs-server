@@ -9,14 +9,12 @@ import {HTTP_STATUS_CODES} from "@aicore/libcommonutils";
 import {getConfigs} from "./utils/configs.js";
 import {getHelloSchema, hello, getHelloPostSchema, helloPost} from "./api/hello.js";
 import {fastifyStatic} from "@fastify/static";
-import helmet from '@fastify/helmet';
 import rateLimit from '@fastify/rate-limit';
 import cors from '@fastify/cors';
 import compression from '@fastify/compress';
 
 import path from 'path';
 import {fileURLToPath} from 'url';
-import * as fs from "node:fs";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -41,24 +39,6 @@ server.addHook('onSend', (request, reply, payload, done) => {
 // Register compression
 server.register(compression, {
     threshold: 1024 // Only compress responses larger than 1KB
-});
-
-// Register security plugins
-server.register(helmet, {
-    contentSecurityPolicy: {
-        directives: {
-            defaultSrc: ["'self'"],
-            styleSrc: ["'self'", "'unsafe-inline'"],
-            imgSrc: ["'self'", 'data:', 'https:'],
-            scriptSrc: ["'self'"],
-            frameSrc: ["'none'"],
-            objectSrc: ["'none'"],
-            upgradeInsecureRequests: []
-        }
-    },
-    crossOriginEmbedderPolicy: true,
-    crossOriginOpenerPolicy: true,
-    crossOriginResourcePolicy: true
 });
 
 server.register(rateLimit, {
