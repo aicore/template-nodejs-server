@@ -9,7 +9,6 @@ import {HTTP_STATUS_CODES} from "@aicore/libcommonutils";
 import {getConfigs} from "./utils/configs.js";
 import {getHelloSchema, hello, getHelloPostSchema, helloPost} from "./api/hello.js";
 import {fastifyStatic} from "@fastify/static";
-import rateLimit from '@fastify/rate-limit';
 import compression from '@fastify/compress';
 
 import path from 'path';
@@ -40,18 +39,6 @@ server.addHook('onSend', (request, reply, payload, done) => {
 // Register compression
 server.register(compression, {
     threshold: 1024 // Only compress responses larger than 1KB
-});
-
-server.register(rateLimit, {
-    max: 100,
-    timeWindow: '1 minute',
-    errorResponseBuilder: function (request, context) {
-        return {
-            code: 429,
-            error: 'Too Many Requests',
-            message: `Rate limit exceeded, retry in ${context.after}`
-        };
-    }
 });
 
 // Global error handler with correlation ID
