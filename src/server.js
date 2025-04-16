@@ -19,6 +19,8 @@ import {fileURLToPath} from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+const CLEANUP_GRACE_TIME_5SEC = 5000;
+
 const server = fastify({
     logger: true,
     trustProxy: true,
@@ -304,7 +306,7 @@ export async function startServer() {
         });
         server.log.info(`Server started on port ${configs.port}`);
     } catch (err) {
-        server.log.error('Error starting server:', err);
+        server.log.error(err, 'Error starting server:');
         process.exit(1);
     }
 }
@@ -316,15 +318,15 @@ export async function close() {
     server.log.info('Shutting down server...');
     try {
         const shutdownTimeout = setTimeout(() => {
-            server.log.warn('Forced shutdown after timeout');
+            server.log.error('Forced shutdown after timeout');
             process.exit(1);
-        }, 30000);
+        }, CLEANUP_GRACE_TIME_5SEC);
 
         await server.close();
         clearTimeout(shutdownTimeout);
         server.log.info('Server shut down successfully');
     } catch (err) {
-        server.log.error('Error during shutdown:', err);
+        server.log.error(err, 'Error during shutdown:');
         process.exit(1);
     }
 }
@@ -344,12 +346,13 @@ process.on('SIGINT', async () => {
 
 // Handle uncaught exceptions
 process.on('uncaughtException', (err) => {
-    server.log.error('Uncaught Exception:', err);
+    server.log.error(err, 'Uncaught Exception:');
     close().then(() => process.exit(1));
 });
 
 // Handle unhandled promise rejections
 process.on('unhandledRejection', (reason, promise) => {
-    server.log.error('Unhandled Rejection at:', promise, 'reason:', reason);
+    // non error rejections do not have a stack trace and hence cannot be located.
+    server.log.error(reason instanceof Error ? reason : { reason }, 'Unhandled Rejection at promise', promise);
     close().then(() => process.exit(1));
 });
