@@ -10,7 +10,6 @@ import {getConfigs} from "./utils/configs.js";
 import {getHelloSchema, hello, getHelloPostSchema, helloPost} from "./api/hello.js";
 import {fastifyStatic} from "@fastify/static";
 import rateLimit from '@fastify/rate-limit';
-import cors from '@fastify/cors';
 import compression from '@fastify/compress';
 
 import path from 'path';
@@ -53,23 +52,6 @@ server.register(rateLimit, {
             message: `Rate limit exceeded, retry in ${context.after}`
         };
     }
-});
-
-server.register(cors, {
-    origin: process.env.NODE_ENV === 'production'
-        ? ['https://yourdomain.com']
-        : true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: [
-        'Content-Type',
-        'Authorization',
-        'X-Requested-With',
-        'Accept'
-    ],
-    exposedHeaders: ['Content-Range', 'X-Content-Range'],
-    credentials: true,
-    maxAge: 86400,
-    preflight: true
 });
 
 // Response Sanitization
