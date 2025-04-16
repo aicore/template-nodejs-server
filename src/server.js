@@ -24,7 +24,6 @@ const __dirname = path.dirname(__filename);
 const server = fastify({
     logger: true,
     trustProxy: true,
-    bodyLimit: 1048576,
     connectionTimeout: 30000,
     keepAliveTimeout: 30000
 });
