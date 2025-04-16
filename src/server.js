@@ -54,25 +54,6 @@ server.register(rateLimit, {
     }
 });
 
-// Response Sanitization
-function sanitizeResponse(data) {
-    const sensitiveFields = ['password', 'token', 'secret', 'key', 'auth'];
-    if (typeof data === 'object' && data !== null) {
-        const sanitized = {...data};
-        Object.keys(sanitized).forEach(key => {
-            if (sensitiveFields.includes(key.toLowerCase())) {
-                delete sanitized[key];
-            }
-        });
-        return sanitized;
-    }
-    return data;
-}
-
-server.addHook('preSerialization', (request, reply, payload, done) => {
-    done(null, sanitizeResponse(payload));
-});
-
 // Global error handler with correlation ID
 server.setErrorHandler((error, request, reply) => {
     const errorLog = {
