@@ -31,9 +31,10 @@
  * @module hello
  */
 
-import {pino} from 'pino';
+import {createLogger} from "./utils/logger.js";
 import {startServer} from "./server.js";
-global.Logger = pino();
+
+global.Logger = createLogger();
 
 startServer();
 

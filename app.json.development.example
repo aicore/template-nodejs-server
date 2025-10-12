@@ -1,6 +1,6 @@
 {
   "stage": "dev",
-  "authKey": "123",
+  "authKey": "your-development-auth-key",
   "allowPublicAccess": false,
   "port": 5000
 }

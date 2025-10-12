@@ -1,0 +1,10 @@
+{
+  "stage": "prod",
+  "authKey": "your-production-auth-key",
+  "allowPublicAccess": true,
+  "port": 5000,
+  "log": {
+    "elasticsearch_host": "https://logs.yourcompany.com",
+    "elasticsearch_api_key": "your-elasticsearch-api-key"
+  }
+}

@@ -256,3 +256,142 @@ if you want to mock/spy on fn() for unit tests, use sinon. refer docs: https://s
 we use c8 for coverage https://github.com/bcoe/c8. Its reporting is based on nyc, so detailed docs can be found
 here: https://github.com/istanbuljs/nyc ; We didn't use nyc as it do not yet have ES module support
 see: https://github.com/digitalbazaar/bedrock-test/issues/16 . c8 is drop replacement for nyc coverage reporting tool
+
+---
+
+## Logging Configuration
+
+This template uses a **stage-based logging system** that automatically adapts to your environment. Logs are beautiful and readable in development, while production logs are structured for Elasticsearch.
+
+### How It Works
+
+The logging system reads the `stage` field from `app.json` and configures logging accordingly:
+
+- **Development** (`dev` or `development`): Pretty, colorized console logs with `pino-pretty`
+- **Production** (`prod` or `production`): ECS JSON format for Elasticsearch with structured fields
+
+### Configuration
+
+Set the `stage` field in your `app.json`:
+
+```json
+{
+  "stage": "dev",
+  "authKey": "your-auth-key",
+  "allowPublicAccess": false,
+  "port": 5000
+}
+```
+
+**Supported stage values:**
+- `"dev"` or `"development"` → Pretty logs for development
+- `"prod"` or `"production"` → ECS JSON logs for production
+
+The `getStage()` function automatically sets `NODE_ENV` to either `"development"` or `"production"` based on your stage configuration.
+
+### Development Logs
+
+When `stage` is `"dev"` or `"development"`, you get beautiful, readable logs:
+
+```
+[14:23:45 INFO] Server started on port 5000
+[14:23:47 INFO] Incoming request
+    url: "/hello?name=world"
+    method: "GET"
+    reqId: "req-1"
+[14:23:47 INFO] Request completed
+    statusCode: 200
+    duration: "142ms"
+```
+
+### Production Logs
+
+When `stage` is `"prod"` or `"production"`, logs are in ECS JSON format:
+
+```json
+{
+  "@timestamp": "2025-10-12T14:23:47.123Z",
+  "log.level": "info",
+  "message": "Request completed",
+  "http.request.method": "GET",
+  "url.full": "/hello?name=world",
+  "http.response.status_code": 200,
+  "event.duration": 142000000,
+  "trace.id": "req-1"
+}
+```
+
+### Elasticsearch Integration
+
+Production logs are automatically shipped to Elasticsearch using **Filebeat** and **journald**:
+
+**Architecture:**
+```
+Application (Pino ECS) → journald → Filebeat → Elasticsearch → Kibana
+```
+
+**How it works:**
+1. Application outputs ECS JSON logs to stdout/stderr
+2. systemd captures logs in journald
+3. Filebeat reads from journald with ndjson parser
+4. Logs are shipped to Elasticsearch with proper structure
+5. Search and visualize in Kibana
+
+**Query logs in Kibana:**
+```
+# Search for errors
+log.level: "error"
+
+# Search by request ID
+trace.id: "req-12345"
+
+# Search by HTTP status
+http.response.status_code: 500
+
+# Search slow requests
+event.duration > 1000000000
+```
+
+### Configuration Examples
+
+- **Development**: See [app.json.development.example](./app.json.development.example)
+- **Production**: See [app.json.production.example](./app.json.production.example)
+
+### Switching Between Modes
+
+To switch between development and production logging, simply change the `stage` field in `app.json`:
+
+```bash
+# For local development
+{
+  "stage": "dev"
+}
+
+# For production deployment
+{
+  "stage": "prod"
+}
+```
+
+Then restart the service:
+```bash
+npm run serve
+```
+
+### Troubleshooting
+
+**Problem:** Logs not appearing in Elasticsearch
+- Check Filebeat service: `sudo systemctl status filebeat`
+- Test Elasticsearch connection: `sudo filebeat test output`
+- View Filebeat logs: `sudo journalctl -u filebeat -n 50`
+
+**Problem:** Development logs still showing as JSON
+- Verify `stage` is set to `"dev"` or `"development"` in app.json
+- Ensure pino-pretty is installed: `npm install --save-dev pino-pretty`
+- Restart the service
+
+**Problem:** Logs have 5-15 second delay in Elasticsearch
+- This is normal! Filebeat batches logs for efficiency
+- For real-time debugging, use `journalctl -f -u <serviceName>.service`
+
+For more details, see the [LOGGING.md](./LOGGING.md) guide.

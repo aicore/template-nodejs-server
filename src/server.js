@@ -4,6 +4,7 @@
  */
 
 import fastify from "fastify";
+import {createFastifyLogger} from "./utils/logger.js";
 import {init, isAuthenticated, addUnAuthenticatedAPI} from "./auth/auth.js";
 import {HTTP_STATUS_CODES} from "@aicore/libcommonutils";
 import {getConfigs} from "./utils/configs.js";
@@ -20,7 +21,7 @@ const __dirname = path.dirname(__filename);
 const CLEANUP_GRACE_TIME_5SEC = 5000;
 
 const server = fastify({
-    logger: true,
+    logger: createFastifyLogger(),
     trustProxy: true,
     connectionTimeout: 30000,
     keepAliveTimeout: 30000
