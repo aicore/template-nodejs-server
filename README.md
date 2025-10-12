@@ -4,36 +4,48 @@ coverage, reporting, GitHub actions for publishing to npm repository, dependency
 
 Easily use this template to quick start a production ready nodejs project template.
 
+## Quick Start
+
 ```shell
-# do this to start server
-cp ./src/a.json ./src/app.json
+# 1. Install dependencies
 npm install
-npm run serve 
 
-# To hit end point, go to browser url http://127.0.0.1:5000/hello?name=rambo
-# or to hit the authenticated url, do the curl command below 
-curl -X GET 'http://127.0.0.1:5000/helloAuth?name=rambo'  -H 'authorization: Basic 123' -H 'Content-Type: application/json' -v 
+# 2. Create your configuration file
+cp ./src/a.json ./src/app.json
 
+# 3. Configure logging (REQUIRED)
+# Edit src/app.json and set the "stage" field:
+#   - "dev" or "development" for local development (pretty logs)
+#   - "prod" or "production" for production (ECS JSON logs for Elasticsearch)
+# See example configs: app.json.development.example and app.json.production.example
+
+# 4. Start the server
+npm run serve        # Production mode
+npm run serve:dev    # Development mode with auto-reload
+
+# 5. Test the endpoints
+# Open browser: http://127.0.0.1:5000/hello?name=rambo
+# Or use curl:
+curl -X GET 'http://127.0.0.1:5000/helloAuth?name=rambo' \
+  -H 'authorization: Basic 123' \
+  -H 'Content-Type: application/json' -v
 ```
 
-```shell
-# use this for continuous reload while development 
-npm run serve:dev
-```
+**⚠️ Note:** The `stage` field in `app.json` is required for proper logging configuration. See [Logging Configuration](#logging-configuration) section for details.
 ## Code Guardian
 
 [![<app> build verification](https://github.com/aicore/template-nodejs/actions/workflows/build_verify.yml/badge.svg)](https://github.com/aicore/template-nodejs/actions/workflows/build_verify.yml)
 
-<a href="https://sonarcloud.io/summary/new_code?id=aicore_template-nodejs-ts">
-  <img src="https://sonarcloud.io/api/project_badges/measure?project=aicore_template-nodejs-ts&metric=alert_status" alt="Sonar code quality check" />
-  <img src="https://sonarcloud.io/api/project_badges/measure?project=aicore_template-nodejs-ts&metric=security_rating" alt="Security rating" />
-  <img src="https://sonarcloud.io/api/project_badges/measure?project=aicore_template-nodejs-ts&metric=vulnerabilities" alt="vulnerabilities" />
-  <img src="https://sonarcloud.io/api/project_badges/measure?project=aicore_template-nodejs-ts&metric=coverage" alt="Code Coverage" />
-  <img src="https://sonarcloud.io/api/project_badges/measure?project=aicore_template-nodejs-ts&metric=bugs" alt="Code Bugs" />
-  <img src="https://sonarcloud.io/api/project_badges/measure?project=aicore_template-nodejs-ts&metric=reliability_rating" alt="Reliability Rating" />
-  <img src="https://sonarcloud.io/api/project_badges/measure?project=aicore_template-nodejs-ts&metric=sqale_rating" alt="Maintainability Rating" />
-  <img src="https://sonarcloud.io/api/project_badges/measure?project=aicore_template-nodejs-ts&metric=ncloc" alt="Lines of Code" />
-  <img src="https://sonarcloud.io/api/project_badges/measure?project=aicore_template-nodejs-ts&metric=sqale_index" alt="Technical debt" />
+<a href="https://sonarcloud.io/summary/new_code?id=aicore_template-nodejs">
+  <img src="https://sonarcloud.io/api/project_badges/measure?project=aicore_template-nodejs&metric=alert_status" alt="Sonar code quality check" />
+  <img src="https://sonarcloud.io/api/project_badges/measure?project=aicore_template-nodejs&metric=security_rating" alt="Security rating" />
+  <img src="https://sonarcloud.io/api/project_badges/measure?project=aicore_template-nodejs&metric=vulnerabilities" alt="vulnerabilities" />
+  <img src="https://sonarcloud.io/api/project_badges/measure?project=aicore_template-nodejs&metric=coverage" alt="Code Coverage" />
+  <img src="https://sonarcloud.io/api/project_badges/measure?project=aicore_template-nodejs&metric=bugs" alt="Code Bugs" />
+  <img src="https://sonarcloud.io/api/project_badges/measure?project=aicore_template-nodejs&metric=reliability_rating" alt="Reliability Rating" />
+  <img src="https://sonarcloud.io/api/project_badges/measure?project=aicore_template-nodejs&metric=sqale_rating" alt="Maintainability Rating" />
+  <img src="https://sonarcloud.io/api/project_badges/measure?project=aicore_template-nodejs&metric=ncloc" alt="Lines of Code" />
+  <img src="https://sonarcloud.io/api/project_badges/measure?project=aicore_template-nodejs&metric=sqale_index" alt="Technical debt" />
 </a>
 
 # TODOs after template use
@@ -49,8 +61,9 @@ npm run serve:dev
    Analysis Method` for the first time before a pull request is
    raised: ![image](https://user-images.githubusercontent.com/5336369/148695840-65585d04-5e59-450b-8794-54ca3c62b9fe.png)
 6. Check codacy runs on pull requests, set codacy defaults. You may remove codacy if sonar cloud is only needed.
-7. Update the above Code Guardian badges; change all `id=aicore_template-nodejs-ts` to the sonar id of your project
+7. Update the above Code Guardian badges; change all `id=aicore_template-nodejs` to the sonar id of your project
    fields. see this PR: https://github.com/aicore/libcache/pull/13
+8. Configure logging stage in app.json (see [Logging Configuration](#logging-configuration) section below)
 
 # Commands available
 

@@ -3,6 +3,8 @@
  * Copyright (c) 2021 - present core.ai . All rights reserved.
  */
 
+// @INCLUDE_IN_API_DOCS
+
 import {pino} from 'pino';
 import {ecsFormat} from '@elastic/ecs-pino-format';
 import {getStage} from './configs.js';
