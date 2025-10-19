@@ -62,12 +62,10 @@ describe('unit Tests for logger', function () {
             const loggerConfig = createFastifyLogger();
 
             expect(loggerConfig).to.exist;
-            expect(loggerConfig.messageKey).to.equal('message');
             expect(loggerConfig.transport).to.exist;
             expect(loggerConfig.transport.target).to.equal('pino-pretty');
             expect(loggerConfig.transport.options).to.exist;
             expect(loggerConfig.transport.options.colorize).to.equal(true);
-            expect(loggerConfig.transport.options.messageKey).to.equal('message');
         });
 
         it('should create production Fastify logger config with ECS format', function () {
@@ -88,12 +86,13 @@ describe('unit Tests for logger', function () {
     });
 
     describe('logger message field consistency', function () {
-        it('development logger should use message field', function () {
+        it('development logger should use standard Pino API', function () {
             delete process.env.NODE_ENV;
             const loggerConfig = createFastifyLogger();
 
-            expect(loggerConfig.messageKey).to.equal('message');
-            expect(loggerConfig.transport.options.messageKey).to.equal('message');
+            // Standard Pino API - no messageKey override needed
+            expect(loggerConfig.transport).to.exist;
+            expect(loggerConfig.transport.target).to.equal('pino-pretty');
         });
 
         it('should maintain ECS compliance in production', function () {

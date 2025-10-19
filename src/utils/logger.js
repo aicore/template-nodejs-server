@@ -22,15 +22,13 @@ export function createLogger() {
     if (isDevelopment) {
         // Pretty logs for development
         return pino({
-            messageKey: 'message',
             transport: {
                 target: 'pino-pretty',
                 options: {
                     colorize: true,
                     translateTime: 'HH:MM:ss Z',
                     ignore: 'pid,hostname',
-                    singleLine: false,
-                    messageKey: 'message'
+                    singleLine: false
                 }
             }
         });
@@ -55,15 +53,13 @@ export function createFastifyLogger() {
     if (isDevelopment) {
         // Pretty logs for development
         return {
-            messageKey: 'message',
             transport: {
                 target: 'pino-pretty',
                 options: {
                     colorize: true,
                     translateTime: 'HH:MM:ss',
                     ignore: 'pid,hostname',
-                    singleLine: false,
-                    messageKey: 'message'
+                    singleLine: false
                 }
             }
         };
