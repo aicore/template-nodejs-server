@@ -4,6 +4,7 @@
  */
 
 import fastify from "fastify";
+import {createFastifyLogger} from "./utils/logger.js";
 import {init, isAuthenticated, addUnAuthenticatedAPI} from "./auth/auth.js";
 import {HTTP_STATUS_CODES} from "@aicore/libcommonutils";
 import {getConfigs} from "./utils/configs.js";
@@ -20,7 +21,8 @@ const __dirname = path.dirname(__filename);
 const CLEANUP_GRACE_TIME_5SEC = 5000;
 
 const server = fastify({
-    logger: true,
+    logger: createFastifyLogger(),
+    disableRequestLogging: true,
     trustProxy: true,
     connectionTimeout: 30000,
     keepAliveTimeout: 30000
@@ -82,7 +84,7 @@ server.addHook('onRequest', (request, reply, done) => {
         request.log.info({
             reqId: request.id,
             correlationId: request.correlationId,
-            msg: 'Request size',
+            message: 'Request size',
             size: `${request.headers['content-length']} bytes`
         });
     }
@@ -93,7 +95,6 @@ server.addHook('onRequest', (request, reply, done) => {
 server.addHook('onRequest', (request, reply, done) => {
     const urlWithoutQuery = request.url.split('?')[0];
     const sanitizedUrl = urlWithoutQuery.replace(/[<>]/g, '');
-    console.log(sanitizedUrl);
     // Skip authentication for static files
     if (request.url.startsWith('/www/')) {
         done();
@@ -103,12 +104,11 @@ server.addHook('onRequest', (request, reply, done) => {
         url: urlWithoutQuery,
         method: request.method
     });
-    console.log(routeExists);
     if (!routeExists) {
         request.log.error({
             reqId: request.id,
             correlationId: request.correlationId,
-            msg: "Route not found",
+            message: "Route not found",
             url: sanitizedUrl,
             method: request.method,
             ip: request.ips
@@ -119,7 +119,7 @@ server.addHook('onRequest', (request, reply, done) => {
         request.log.warn({
             reqId: request.id,
             correlationId: request.correlationId,
-            msg: "Unauthorized access attempt",
+            message: "Unauthorized access attempt",
             url: sanitizedUrl,
             method: request.method,
             ip: request.ips
@@ -130,7 +130,7 @@ server.addHook('onRequest', (request, reply, done) => {
     request.log.info({
         reqId: request.id,
         correlationId: request.correlationId,
-        msg: "Request authenticated",
+        message: "Request authenticated",
         url: sanitizedUrl,
         method: request.method
     });
@@ -142,7 +142,7 @@ server.addHook('onRequest', (request, reply, done) => {
     request.log.info({
         reqId: request.id,
         correlationId: request.correlationId,
-        msg: 'Incoming request',
+        message: 'Incoming request',
         url: request.url,
         method: request.method,
         ip: request.ips
@@ -156,7 +156,7 @@ server.addHook('onResponse', (request, reply, done) => {
     const logData = {
         reqId: request.id,
         correlationId: request.correlationId,
-        msg: 'Request completed',
+        message: 'Request completed',
         url: request.url,
         method: request.method,
         statusCode: reply.statusCode,
@@ -208,7 +208,7 @@ server.get('/health', async (request, reply) => {
 
         reply.send(health);
     } catch (error) {
-        request.log.error('Health check failed:', error);
+        request.log.error({message: 'Health check failed', error});
         reply.code(503).send({
             status: 'ERROR',
             timestamp: new Date().toISOString(),
@@ -254,9 +254,9 @@ export async function startServer() {
             port: configs.port,
             host: configs.allowPublicAccess ? '0.0.0.0' : 'localhost'
         });
-        server.log.info(`Server started on port ${configs.port}`);
+        server.log.info({message: `Server started on port ${configs.port}`});
     } catch (err) {
-        server.log.error(err, 'Error starting server:');
+        server.log.error({message: 'Error starting server', error: err});
         process.exit(1);
     }
 }
@@ -265,44 +265,44 @@ export async function startServer() {
  * Gracefully closes the server
  */
 export async function close() {
-    server.log.info('Shutting down server...');
+    server.log.info({message: 'Shutting down server...'});
     try {
         const shutdownTimeout = setTimeout(() => {
-            server.log.error('Forced shutdown after timeout');
+            server.log.error({message: 'Forced shutdown after timeout'});
             process.exit(1);
         }, CLEANUP_GRACE_TIME_5SEC);
 
         await server.close();
         clearTimeout(shutdownTimeout);
-        server.log.info('Server shut down successfully');
+        server.log.info({message: 'Server shut down successfully'});
     } catch (err) {
-        server.log.error(err, 'Error during shutdown:');
+        server.log.error({message: 'Error during shutdown', error: err});
         process.exit(1);
     }
 }
 
 // Handle process termination
 process.on('SIGTERM', async () => {
-    server.log.info('SIGTERM received');
+    server.log.info({message: 'SIGTERM received'});
     await close();
     process.exit(0);
 });
 
 process.on('SIGINT', async () => {
-    server.log.info('SIGINT received');
+    server.log.info({message: 'SIGINT received'});
     await close();
     process.exit(0);
 });
 
 // Handle uncaught exceptions
 process.on('uncaughtException', (err) => {
-    server.log.error(err, 'Uncaught Exception:');
+    server.log.error({message: 'Uncaught Exception', error: err});
     close().then(() => process.exit(1));
 });
 
 // Handle unhandled promise rejections
 process.on('unhandledRejection', (reason, promise) => {
     // non error rejections do not have a stack trace and hence cannot be located.
-    server.log.error(reason instanceof Error ? reason : { reason }, 'Unhandled Rejection at promise', promise);
+    server.log.error({message: 'Unhandled Rejection at promise', error: reason instanceof Error ? reason : { reason }, promise});
     close().then(() => process.exit(1));
 });
