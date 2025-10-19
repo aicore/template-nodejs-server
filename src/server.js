@@ -84,9 +84,8 @@ server.addHook('onRequest', (request, reply, done) => {
         request.log.info({
             reqId: request.id,
             correlationId: request.correlationId,
-            message: 'Request size',
             size: `${request.headers['content-length']} bytes`
-        });
+        }, 'Request size');
     }
     done();
 });
@@ -108,32 +107,29 @@ server.addHook('onRequest', (request, reply, done) => {
         request.log.error({
             reqId: request.id,
             correlationId: request.correlationId,
-            message: "Route not found",
             url: sanitizedUrl,
             method: request.method,
             ip: request.ips
-        });
+        }, "Route not found");
         reply.code(HTTP_STATUS_CODES.NOT_FOUND);
         return reply.send({error: 'Not Found'});
     } else if (!isAuthenticated(request)) {
         request.log.warn({
             reqId: request.id,
             correlationId: request.correlationId,
-            message: "Unauthorized access attempt",
             url: sanitizedUrl,
             method: request.method,
             ip: request.ips
-        });
+        }, "Unauthorized access attempt");
         reply.code(HTTP_STATUS_CODES.UNAUTHORIZED);
         return reply.send({error: 'Unauthorized'});
     }
     request.log.info({
         reqId: request.id,
         correlationId: request.correlationId,
-        message: "Request authenticated",
         url: sanitizedUrl,
         method: request.method
-    });
+    }, "Request authenticated");
     done();
 });
 
@@ -142,27 +138,24 @@ server.addHook('onRequest', (request, reply, done) => {
     request.log.info({
         reqId: request.id,
         correlationId: request.correlationId,
-        message: 'Incoming request',
         url: request.url,
         method: request.method,
         ip: request.ips
-    });
+    }, 'Incoming request');
     done();
 });
 
 // Response logging hook with correlation ID
 server.addHook('onResponse', (request, reply, done) => {
     const duration = Date.now() - request.startTime;
-    const logData = {
+    request.log.info({
         reqId: request.id,
         correlationId: request.correlationId,
-        message: 'Request completed',
         url: request.url,
         method: request.method,
         statusCode: reply.statusCode,
         duration: `${duration}ms`
-    };
-    request.log.info(logData);
+    }, 'Request completed');
     done();
 });
 
@@ -208,7 +201,7 @@ server.get('/health', async (request, reply) => {
 
         reply.send(health);
     } catch (error) {
-        request.log.error({message: 'Health check failed', error});
+        request.log.error(error, 'Health check failed');
         reply.code(503).send({
             status: 'ERROR',
             timestamp: new Date().toISOString(),
