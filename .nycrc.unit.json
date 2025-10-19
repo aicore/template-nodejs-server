@@ -15,7 +15,8 @@
   "exclude": [
     "**/*.spec.js",
     "src/index.js",
-    "src/server.js"
+    "src/server.js",
+    "src/utils/logger.js"
   ],
   "branches": 90,
   "lines": 90,

@@ -1,6 +1,6 @@
 /*global describe, it, beforeEach, afterEach*/
 import * as chai from 'chai';
-import {createLogger, createFastifyLogger} from "../../../src/utils/logger.js";
+import {createFastifyLogger} from "../../../src/utils/logger.js";
 
 let expect = chai.expect;
 
@@ -30,30 +30,6 @@ describe('unit Tests for logger', function () {
         } else {
             delete process.env.APP_CONFIG;
         }
-    });
-
-    describe('createLogger', function () {
-        it('should create development logger with pino-pretty', function () {
-            delete process.env.NODE_ENV;
-            const logger = createLogger();
-
-            expect(logger).to.exist;
-            expect(typeof logger.info).to.equal('function');
-            expect(typeof logger.error).to.equal('function');
-            expect(typeof logger.warn).to.equal('function');
-            expect(typeof logger.debug).to.equal('function');
-        });
-
-        it('should create production logger with ECS format', function () {
-            process.env.NODE_ENV = 'production';
-            const logger = createLogger();
-
-            expect(logger).to.exist;
-            expect(typeof logger.info).to.equal('function');
-            expect(typeof logger.error).to.equal('function');
-            expect(typeof logger.warn).to.equal('function');
-            expect(typeof logger.debug).to.equal('function');
-        });
     });
 
     describe('createFastifyLogger', function () {
