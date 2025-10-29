@@ -56,12 +56,7 @@ server.setErrorHandler((error, request, reply) => {
     };
     request.log.error(errorLog);
 
-    reply.status(error.statusCode || 500).send({
-        error: process.env.NODE_ENV === 'production'
-            ? 'Internal Server Error'
-            : error.message,
-        correlationId: request.correlationId
-    });
+    reply.status(error.statusCode || 500).send('Internal Server Error');
 });
 
 // Add request validation hook
