@@ -45,18 +45,27 @@ server.register(compression, {
 
 // Global error handler with correlation ID
 server.setErrorHandler((error, request, reply) => {
+    const alreadySent = reply.sent || reply.raw.headersSent || reply.raw.writableEnded;
+    const errorCode = error.statusCode || 500;
     const errorLog = {
         reqId: request.id,
         correlationId: request.correlationId,
         url: request.url,
         method: request.method,
-        statusCode: error.statusCode || 500,
+        statusCode: errorCode,
         error: error.message,
-        stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+        stack: error.stack
     };
     request.log.error(errorLog);
+    if(alreadySent){
+        // the api already set the appropriate error message. we shouldnt do anything now.
+        return;
+    }
 
-    reply.status(error.statusCode || 500).send('Internal Server Error');
+    const errorMessage = errorCode === 500 ?
+        'Internal Server Error' : // if 500, we dont want to expose internal error to user
+        error.message || 'Internal Server Error';
+    reply.status(errorCode).send(errorMessage);
 });
 
 // Add request validation hook
@@ -228,6 +237,19 @@ server.get('/helloAuth', {
     timeout: 5000 // 5 second timeout
 }, function (request, reply) {
     return hello(request, reply);
+});
+
+server.setNotFoundHandler((request, reply) => {
+    request.log.info({
+        message: 'Route not found (404)',
+        reqId: request.id,
+        correlationId: request.correlationId,
+        url: request.url,
+        method: request.method
+    });
+
+    // Return 404 page using EJS view
+    reply.status(404).send('notFound');
 });
 
 /**
