@@ -65,7 +65,7 @@ server.setErrorHandler((error, request, reply) => {
     const errorMessage = errorCode === 500 ?
         'Internal Server Error' : // if 500, we dont want to expose internal error to user
         error.message || 'Internal Server Error';
-    reply.status(errorCode).send(errorMessage);
+    reply.status(errorCode).send({error: errorMessage});
 });
 
 // Add request validation hook
