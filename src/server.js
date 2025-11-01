@@ -50,14 +50,19 @@ server.setErrorHandler((error, request, reply) => {
     if(error.stack){
         const wrappedError = new Error(error.message);
         wrappedError.stack = error.stack;
-        // important! the first parameter of log.error is the error object with an optional second parameter
-        // for the message.
+        // For `request.log.error`, you can pass either:
+        //   1. (errorMessageStr) — logs the error string if Error is not provided, or
+        //   2. (Error) — logs the error object with its stack trace, or
+        //   3. (Error, message) — logs both the structured error and a custom message.
+        // This ensures proper parsing and correlation in the log pipeline.
         request.log.error(wrappedError, `Request error: ${error.message}`);
     } else {
-        // if the error is not an instance of Error, we should log it as a string. if first parameter is a string,
-        // then args from the second parameter are ignored. so always only log:
-        // one string parameter or (err,string) for request.log.error
-        // for request.log.info, pino only supports a single string parameter. this is important for logs to work.
+        // ⚠️ If the error is not an instance of Error, log it as a plain string.
+        // When the first argument is a string, any subsequent arguments are ignored.
+        // For consistency:
+        //   - `request.log.error`: use either (Error, message) or a single string
+        //   - `request.log.info`: only supports a single string argument
+        // These rules ensure correct log formatting and compatibility with our dashboards.
         request.log.error(`Request error: ${error.message}`);
     }
     if(alreadySent){
@@ -88,13 +93,10 @@ server.addHook('onRequest', (request, reply, done) => {
 
     request.startTime = Date.now();
     if (request.headers['content-length']) {
-        // for request.log.info, pino only supports a single string parameter or a serializable json
-        // with a `message` attribute like below. this is important for logs to work. you can put in url and other
-        // ewll known fields we support in our logging dashboard. you need not do this, only a string is needed and
-        // in dashboard the request id is injected with the log line. use object instead of string only for
-        // additional attributes like correlation id, url, size etc. these needs not be with every request as you
-        // can search all these with the request id in the dashboard to get context, so plain strings are
-        // recommended for logging info in most cases.
+        // For request.log.info, Pino supports either a plain string or a JSON object with a `message` field.
+        // Use a string message for most info logs — the request ID is automatically included in the dashboard.
+        // Only use a JSON object when you need to attach extra metadata (e.g., correlationId, URL, size, etc.).
+        // These fields are optional since you can always look up related context by request ID in the dashboard.
         request.log.info({
             message: 'Request size',
             reqId: request.id,
