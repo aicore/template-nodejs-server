@@ -27,11 +27,12 @@
     "cover": "npm run cover:unit",
     "cover:unit": "c8 -c .nycrc.unit.json npm run test:unit && npm run --silent printReportsLink",
     "vulnerabilityCheck": "echo Scanning for npm vulnarabilities && npm audit --prod",
-    "build": "npm run cover && npm run createJSDocs && npm run vulnerabilityCheck",
+    "build": "npm run cover && npm run createJSDocs && npm run vulnerabilityCheck && npm run generateGrafanaDashboard",
     "createJSDocs": "node build/jsDocGenerate.js src docs/generatedApiDocs && git add docs",
     "bumpPatchVersion": "npm --no-git-tag-version version patch",
     "bumpPatchVersionWithGitTag": "npm version patch",
     "release": "npm run bumpPatchVersionWithGitTag",
+    "generateGrafanaDashboard": "node build/generate-grafana-system-dashboard.js",
     "serve": "APP_CONFIG=./src/app.json node src/index.js",
     "serve:dev": "APP_CONFIG=./src/app.json nodemon src/index.js"
   },
