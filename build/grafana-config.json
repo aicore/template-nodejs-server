@@ -1,0 +1,5 @@
+{
+  "serviceName": "your-metric-service-name",
+  "stage": "prod",
+  "dashboardNamePrefix": "your dashboard name"
+}
