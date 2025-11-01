@@ -47,16 +47,19 @@ server.register(compression, {
 server.setErrorHandler((error, request, reply) => {
     const alreadySent = reply.sent || reply.raw.headersSent || reply.raw.writableEnded;
     const errorCode = error.statusCode || 500;
-    const errorLog = {
-        reqId: request.id,
-        correlationId: request.correlationId,
-        url: request.url,
-        method: request.method,
-        statusCode: errorCode,
-        error: error.message,
-        stack: error.stack
-    };
-    request.log.error(errorLog);
+    if(error.stack){
+        const wrappedError = new Error(error.message);
+        wrappedError.stack = error.stack;
+        // important! the first parameter of log.error is the error object with an optional second parameter
+        // for the message.
+        request.log.error(wrappedError, `Request error: ${error.message}`);
+    } else {
+        // if the error is not an instance of Error, we should log it as a string. if first parameter is a string,
+        // then args from the second parameter are ignored. so always only log:
+        // one string parameter or (err,string) for request.log.error
+        // for request.log.info, pino only supports a single string parameter. this is important for logs to work.
+        request.log.error(`Request error: ${error.message}`);
+    }
     if(alreadySent){
         // the api already set the appropriate error message. we shouldnt do anything now.
         return;
@@ -85,11 +88,20 @@ server.addHook('onRequest', (request, reply, done) => {
 
     request.startTime = Date.now();
     if (request.headers['content-length']) {
+        // for request.log.info, pino only supports a single string parameter or a serializable json
+        // with a `message` attribute like below. this is important for logs to work. you can put in url and other
+        // ewll known fields we support in our logging dashboard. you need not do this, only a string is needed and
+        // in dashboard the request id is injected with the log line. use object instead of string only for
+        // additional attributes like correlation id, url, size etc. these needs not be with every request as you
+        // can search all these with the request id in the dashboard to get context, so plain strings are
+        // recommended for logging info in most cases.
         request.log.info({
+            message: 'Request size',
             reqId: request.id,
+            url: request.url,
             correlationId: request.correlationId,
             size: `${request.headers['content-length']} bytes`
-        }, 'Request size');
+        });
     }
     done();
 });
@@ -109,31 +121,27 @@ server.addHook('onRequest', (request, reply, done) => {
     });
     if (!routeExists) {
         request.log.error({
+            message: 'Route not found',
             reqId: request.id,
             correlationId: request.correlationId,
             url: sanitizedUrl,
             method: request.method,
             ip: request.ips
-        }, "Route not found");
+        });
         reply.code(HTTP_STATUS_CODES.NOT_FOUND);
         return reply.send({error: 'Not Found'});
     } else if (!isAuthenticated(request)) {
         request.log.warn({
+            message: 'Unauthorized access attempt',
             reqId: request.id,
             correlationId: request.correlationId,
             url: sanitizedUrl,
             method: request.method,
             ip: request.ips
-        }, "Unauthorized access attempt");
+        });
         reply.code(HTTP_STATUS_CODES.UNAUTHORIZED);
         return reply.send({error: 'Unauthorized'});
     }
-    request.log.info({
-        reqId: request.id,
-        correlationId: request.correlationId,
-        url: sanitizedUrl,
-        method: request.method
-    }, "Request authenticated");
     done();
 });
 
@@ -153,13 +161,14 @@ server.addHook('onRequest', (request, reply, done) => {
 server.addHook('onResponse', (request, reply, done) => {
     const duration = Date.now() - request.startTime;
     request.log.info({
+        message: 'Request completed',
         reqId: request.id,
         correlationId: request.correlationId,
         url: request.url,
         method: request.method,
         statusCode: reply.statusCode,
         duration: `${duration}ms`
-    }, 'Request completed');
+    });
     done();
 });
 
@@ -264,9 +273,9 @@ export async function startServer() {
             port: configs.port,
             host: configs.allowPublicAccess ? '0.0.0.0' : 'localhost'
         });
-        server.log.info({message: `Server started on port ${configs.port}`});
+        server.log.info(`Server started on port ${configs.port}`);
     } catch (err) {
-        server.log.error({message: 'Error starting server', error: err});
+        server.log.error(err, 'Error starting server');
         process.exit(1);
     }
 }
@@ -278,41 +287,45 @@ export async function close() {
     server.log.info({message: 'Shutting down server...'});
     try {
         const shutdownTimeout = setTimeout(() => {
-            server.log.error({message: 'Forced shutdown after timeout'});
+            server.log.error('Forced shutdown after timeout');
             process.exit(1);
         }, CLEANUP_GRACE_TIME_5SEC);
 
         await server.close();
         clearTimeout(shutdownTimeout);
-        server.log.info({message: 'Server shut down successfully'});
+        server.log.info('Server shut down successfully');
     } catch (err) {
-        server.log.error({message: 'Error during shutdown', error: err});
+        server.log.error(err, 'Error during shutdown');
         process.exit(1);
     }
 }
 
 // Handle process termination
 process.on('SIGTERM', async () => {
-    server.log.info({message: 'SIGTERM received'});
+    server.log.info('SIGTERM received');
     await close();
     process.exit(0);
 });
 
 process.on('SIGINT', async () => {
-    server.log.info({message: 'SIGINT received'});
+    server.log.info('SIGINT received');
     await close();
     process.exit(0);
 });
 
 // Handle uncaught exceptions
 process.on('uncaughtException', (err) => {
-    server.log.error({message: 'Uncaught Exception', error: err});
+    server.log.error(err, 'Uncaught Exception');
     close().then(() => process.exit(1));
 });
 
 // Handle unhandled promise rejections
 process.on('unhandledRejection', (reason, promise) => {
     // non error rejections do not have a stack trace and hence cannot be located.
-    server.log.error({message: 'Unhandled Rejection at promise', error: reason instanceof Error ? reason : { reason }, promise});
+    if(reason instanceof Error){
+        server.log.error(reason, 'Unhandled Rejection at promise');
+    } else {
+        server.log.error('Unhandled Rejection at promise. reason:' + reason);
+    }
     close().then(() => process.exit(1));
 });
