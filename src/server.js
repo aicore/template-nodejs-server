@@ -4,6 +4,7 @@
  */
 
 import fastify from "fastify";
+import * as crypto from "crypto";
 import {createFastifyLogger} from "./utils/logger.js";
 import {init, isAuthenticated, addUnAuthenticatedAPI} from "./auth/auth.js";
 import {HTTP_STATUS_CODES} from "@aicore/libcommonutils";
