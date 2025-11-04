@@ -14,6 +14,12 @@ import compression from '@fastify/compress';
 
 import path from 'path';
 import {fileURLToPath} from 'url';
+import {
+    STATIC_WWW_IMMUTABLE_PATH_ON_DISC,
+    STATIC_WWW_IMMUTABLE_PREFIX,
+    STATIC_WWW_PATH_ON_DISC,
+    STATIC_WWW_PREFIX
+} from "./constants.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -25,7 +31,9 @@ const server = fastify({
     disableRequestLogging: true,
     trustProxy: true,
     connectionTimeout: 30000,
-    keepAliveTimeout: 30000
+    keepAliveTimeout: 30000,
+    // Generate longer, unique request IDs using UUIDs
+    genReqId: () => crypto.randomUUID()
 });
 // Add Request ID Propagation
 server.decorateRequest('setCorrelationId', function (correlationId) {
@@ -113,7 +121,7 @@ server.addHook('onRequest', (request, reply, done) => {
     const urlWithoutQuery = request.url.split('?')[0];
     const sanitizedUrl = urlWithoutQuery.replace(/[<>]/g, '');
     // Skip authentication for static files
-    if (request.url.startsWith('/www/')) {
+    if (request.url.startsWith(STATIC_WWW_PREFIX) || request.url.startsWith(STATIC_WWW_IMMUTABLE_PREFIX)) {
         done();
         return;
     }
@@ -176,13 +184,31 @@ server.addHook('onResponse', (request, reply, done) => {
 
 // Register static file serving
 server.register(fastifyStatic, {
-    root: path.join(__dirname, 'www'),
-    prefix: '/www/',
+    root: path.join(__dirname, STATIC_WWW_PATH_ON_DISC),
+    prefix: STATIC_WWW_PREFIX,
     decorateReply: false,
     serve: true,
     index: ['index.html', 'index.htm']
 });
+server.log.info("Serving static files at " + STATIC_WWW_PREFIX);
 
+// Register static file serving
+server.register(fastifyStatic, {
+    root: path.join(__dirname, STATIC_WWW_IMMUTABLE_PATH_ON_DISC),
+    prefix: STATIC_WWW_IMMUTABLE_PREFIX,
+    cacheControl: false,  // Disable default cache control, we set it ourselves
+    etag: false,  // Not needed for immutable content
+    lastModified: false,  // Not needed for immutable content
+    serve: true,
+    setHeaders: (res) => {
+        // Cache assets for 1 year with immutable directive
+        // immutable tells browsers the content will never change at this URL
+        // This eliminates revalidation requests even on hard refresh (in supporting browsers)
+        res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+    },
+    index: ['index.html', 'index.htm']
+});
+server.log.info("Serving NGINX cached static files at " + STATIC_WWW_IMMUTABLE_PREFIX);
 
 // Enhanced Health Check endpoint
 server.get('/health', async (request, reply) => {
@@ -226,6 +252,9 @@ server.get('/health', async (request, reply) => {
         });
     }
 });
+
+addUnAuthenticatedAPI(`${STATIC_WWW_IMMUTABLE_PREFIX}*`);
+addUnAuthenticatedAPI(`${STATIC_WWW_PREFIX}*`);
 
 addUnAuthenticatedAPI('/ping');
 server.get('/ping', async (request, reply) => {
