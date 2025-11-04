@@ -1,6 +1,8 @@
 /*global describe, it*/
 import * as chai from 'chai';
 import {clearAppConfig, getConfigs} from "../../../src/utils/configs.js";
+import * as constants from "../../../src/constants.js";
+import {GIT_COMMIT_HASH_SHORT} from "../../../src/constants.js";
 
 let expect = chai.expect;
 
@@ -48,4 +50,7 @@ function _verifyConfigs(configs) {
     expect(configs.mysql.host.length).to.gt(0);
     expect(configs.mysql.database.length).to.gt(0);
 
+    expect(constants.STATIC_WWW_IMMUTABLE_PREFIX).to.contain("/www-immutable/");
+    expect(constants.STATIC_WWW_IMMUTABLE_PREFIX).to.contain(constants.GIT_COMMIT_HASH_SHORT);
+    expect(constants.STATIC_WWW_PREFIX).to.contain("/www/");
 }
