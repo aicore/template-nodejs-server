@@ -57,7 +57,7 @@
     "cli-color": "2.0.4",
     "documentation": "^6.2.0",
     "eslint": "^9.38.0",
-    "glob": "11.0.1",
+    "glob": "11.1.0",
     "husky": "9.1.7",
     "mocha": "11.1.0",
     "nodemon": "3.1.9"
